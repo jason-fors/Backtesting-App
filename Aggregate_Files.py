@@ -14,14 +14,25 @@ import gzip
 import os
 
 
+# # Doing this a different way.
+# def unzipAndAppend(year, date, ticker, thisFile):
+#     nextFile = "C:\\Users\\jason\\OneDrive\\Documents\\Old PC\\Model_Test\\fut_trades_1min\\" + year + "\\" + date + "\\" + ticker + "\\" + thisFile
+#     with gzip.open(nextFile, 'rb') as unzippedFile:     # Opens a .gz file
+#         file_content = unzippedFile.read()
+#     with open('C:\\Users\\jason\\OneDrive\\Documents\\Old PC\\Model_Test\\AllRecords.csv', "a") as f:  # Appending records from unzipped file to aggregate file. 
+#         f.write(file_content)
+#         file_content.close()  # Close file to prevent memory leak
 
-def unzipAndAppend(year, date, ticker, thisFile):
-    nextFile = "C:\\Users\\jason\\OneDrive\\Documents\\Old PC\\Model_Test\\fut_trades_1min\\" + year + "\\" + date + "\\" + ticker + "\\" + thisFile
-    with gzip.open(nextFile, 'rb') as unzippedFile:     # Opens a .gz file
+
+# Function for appending content from a selected file to the aggregate file
+def appendData(iFilePath):
+    with gzip.open(iFilePath, 'rt') as unzippedFile:
         file_content = unzippedFile.read()
-    with open('C:\\Users\\jason\\OneDrive\\Documents\\Old PC\\Model_Test\\AllRecords.csv', "a") as f:  # Appending records from unzipped file to aggregate file. 
-        f.write(file_content)
-        file_content.close()  # Close file to prevent memory leak
+        print(len(file_content))
+        unzippedFile.close()
+    with open('C:\\Users\\jason\\OneDrive\\Documents\\Old PC\\Model_Test\\AllRecords.csv', "w") as f:  # Writing records from unzipped file to aggregate file. 
+        f.write(file_content[1:])       # Need to skip the first line so we don't get a new header line for every file.
+        f.close()  
 
 
 # Function for finding longest file in a folder
@@ -42,19 +53,6 @@ def findActiveContract(tickerPath):        #  Pass in the current directory
     return longestFilePath
 
 
-# Function for appending content from a selected file to the aggregate file
-def appendData(iFilePath):
-    with gzip.open(iFilePath, 'rt') as unzippedFile:
-        file_content = unzippedFile.read()
-        print(len(file_content))
-        unzippedFile.close()
-    with open('C:\\Users\\jason\\OneDrive\\Documents\\Old PC\\Model_Test\\AllRecords.csv', "w") as f:  # Writing records from unzipped file to aggregate file. 
-        f.write(file_content[1:])       # Need to skip the first line so we don't get a new header line for every file.
-        f.close()  
-
-
-
-
 if __name__ == "__main__":
     # Using nested for loops to cycle through the folder tree structure provided by data vendor
     tradesPath = r'C:\Users\jason\OneDrive\Documents\Old PC\Model_Test\fut_trades_1min'
@@ -71,4 +69,5 @@ if __name__ == "__main__":
                 tickerPath = dayPath + "\\" + ticker
                 tickerDirectory = os.listdir(path=tickerPath)
                 print(tickerDirectory)
-   
+                # fileToAppend = findActiveContract(tickerPath)
+                # appendData(fileToAppend)
