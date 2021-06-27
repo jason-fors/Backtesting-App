@@ -5,6 +5,37 @@ Make testing adaptable for testing different algorithms.
 
 Consider developing approach for optimizing along certain parameters.
 
+Looking at a deviation where:
+YM (Dow) - Tick Size = $5
+ES (S&P) - tick size = $0.25
+Net change from previous close, $0.25 increments.
+
+(delta ES * 50) - (delta YM * 5) = Deviation
+
+Dow is roughly 8 times S&P.  Why only 
+
+Different Regimes: Sunday, Monday-Wednesday, Friday
+
+Rules:
+1. 6pm - 9pm - Mean Reversion
+After 10pm - Deviation trend - Following
+$100 gain or loss
+Change in deviation
+
+Opens: 6pm EST
+Closes: 5pm EST
+Week is 6pm Sun to 5pm Fri
+
+
+previousDayDeviationES = finalPreviousES - currentES
+previousDayDeviationYM = finalPreviousYM - currentYM
+
+Shape of previous day: maxDev, minDev, zeroCrossings, rangeYM, rangeES
+
+
+
+
+
 
 """
 
@@ -109,10 +140,36 @@ class ParentWindow(Frame):
         self.master.destroy()  # Closes window
         
         
-       
+
+def makeVars():
+    with open('C:\\Users\\jason\\OneDrive\\Documents\\Old PC\\Model_Test\\AllRecords.csv', "rt") as allRecords:  # Writing records from unzipped file to aggregate file. a+ means append and create if it doesn't exist.
+            for line in allRecords:
+                deviation = (deltaES * esMult) + (deltaYM * ymMult)
+            allRecords.close()
+
+
+def getPreviousDayData(date):
+    yesterdayFactsES = {}
+    yesterdayFactsES(closePrice) = 0
+    yesterdayFactsES(maxDev) = 0
+    yesterdayFactsES(minDev) = 0
+    yesterdayFactsES(zeroCrossings) = 0
+    yesterdayFactsES(totalRange) = 0
+    yesterdayFactsYM = {}
+    yesterdayFactsYM(closePrice) = 0
+    yesterdayFactsYM(maxDev) = 0
+    yesterdayFactsYM(minDev) = 0
+    yesterdayFactsYM(zeroCrossings) = 0
+    yesterdayFactsYM(totalRange) = 0
 
         
 if __name__ == "__main__":
+    esMult = 50     # Global variable: Multiplier for Dow deviation calculation
+    ymMult = 5      # Global variable: Multiplier for S&P deviation calculation
+    deltaES = 0     # Global variable: Change in S&P
+    deltaYM = 0     # Global variable: Change in Dow
+
+    # Launching GUI Window and keeping it open
     root = Tk()
     mainWindow = ParentWindow(root)
     root.mainloop()
