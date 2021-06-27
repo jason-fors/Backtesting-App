@@ -1,3 +1,15 @@
+""" Go through all the files purchased from vendor and aggregate the desired case data into one file. 
+This will require:
+1. Moving through all the (2,273) files in the folder structure (3 layers deep, 1,193 folders) and:
+    a. Identifying the correct folders for each ticker (ES or YM) within each day,
+    b. Identifying which contract makes the most sense for that day (the file with the most records should work)
+    c. Add those records into an aggregate file.
+2. Repeat this process for each ticker, putting them all in one file. 
+
+.gz files are compressed.  Need to unzip as well.
+
+"""
+
 import gzip
 import os
 
@@ -10,26 +22,6 @@ def unzipAndAppend(year, date, ticker, thisFile):
     with open('C:\\Users\\jason\\OneDrive\\Documents\\Old PC\\Model_Test\\AllRecords.csv', "a") as f:  # Appending records from unzipped file to aggregate file. 
         f.write(file_content)
         file_content.close()  # Close file to prevent memory leak
-
-def getFileLength(file):
-    print("Called getFileLenth method, which has not been defined yet.")
-
-
-# Using nested for loops to cycle through the folder tree structure provided by data vendor
-tradesPath = r'C:\Users\jason\OneDrive\Documents\Old PC\Model_Test\fut_trades_1min'
-tradesDirectory = os.listdir(path=tradesPath)
-for year in tradesDirectory: 
-    yearPath = tradesPath + "\\" + year
-    yearDirectory = os.listdir(path=yearPath)
-    print(yearDirectory)
-    for day in yearDirectory:
-        dayPath = yearDirectory + "\\" + day
-        dayDirectory = os.listdir(path=dayPath)
-        print(dayDirectory)
-        for ticker in dayDirectory:
-            tickerPath = dayPath + "\\" + ticker
-            tickerDirectory = os.listdir(path=tickerPath)
-            print(tickerDirectory)
 
 
 # Function for finding longest file in a folder
@@ -63,26 +55,20 @@ def appendData(iFilePath):
 
 
 
-
 if __name__ == "__main__":
-    folderPath = "C:\\Users\\Jason Fors\\Documents\\GitHub\\Python-Projects"
-    folderDirectory = os.listdir(path=folderPath)
-    
-    for i in folderDirectory:
-        longest = 0
-        
-        if ".txt" in i:
-            fullPath = os.path.join(folderPath, i)
-            print(fullPath + "\n Seconds since the Epoch: " + str(os.path.getmtime(fullPath)))
-
-
-
-
-
-
-
-
-
-
-
-
+    # Using nested for loops to cycle through the folder tree structure provided by data vendor
+    tradesPath = r'C:\Users\jason\OneDrive\Documents\Old PC\Model_Test\fut_trades_1min'
+    tradesDirectory = os.listdir(path=tradesPath)
+    for year in tradesDirectory: 
+        yearPath = tradesPath + "\\" + year
+        yearDirectory = os.listdir(path=yearPath)
+        print(yearDirectory)
+        for day in yearDirectory:
+            dayPath = yearDirectory + "\\" + day
+            dayDirectory = os.listdir(path=dayPath)
+            print(dayDirectory)
+            for ticker in dayDirectory:
+                tickerPath = dayPath + "\\" + ticker
+                tickerDirectory = os.listdir(path=tickerPath)
+                print(tickerDirectory)
+   
