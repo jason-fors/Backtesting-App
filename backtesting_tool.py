@@ -34,6 +34,9 @@ Shape of previous day: maxDev, minDev, zeroCrossings, rangeYM, rangeES
 
 
 
+So, we're going to cycle through each day, and starting with day 2, check against the previous day for:
+1. 
+
 
 
 
@@ -148,19 +151,14 @@ def makeVars():
             allRecords.close()
 
 
-def getPreviousDayData(date):
-    yesterdayFactsES = {}
-    yesterdayFactsES(closePrice) = 0
-    yesterdayFactsES(maxDev) = 0
-    yesterdayFactsES(minDev) = 0
-    yesterdayFactsES(zeroCrossings) = 0
-    yesterdayFactsES(totalRange) = 0
-    yesterdayFactsYM = {}
-    yesterdayFactsYM(closePrice) = 0
-    yesterdayFactsYM(maxDev) = 0
-    yesterdayFactsYM(minDev) = 0
-    yesterdayFactsYM(zeroCrossings) = 0
-    yesterdayFactsYM(totalRange) = 0
+def getPreviousDayData(ticker, date):
+    yesterdayFacts = {}
+    # yesterdayFacts(closePrice) = 0
+    # yesterdayFacts(maxDev) = 0
+    # yesterdayFacts(minDev) = 0
+    # yesterdayFacts(zeroCrossings) = 0
+    # yesterdayFacts(totalRange) = 0
+    return yesterdayFacts
 
         
 if __name__ == "__main__":
@@ -168,7 +166,6 @@ if __name__ == "__main__":
     ymMult = 5      # Global variable: Multiplier for S&P deviation calculation
     deltaES = 0     # Global variable: Change in S&P
     deltaYM = 0     # Global variable: Change in Dow
-
     # Launching GUI Window and keeping it open
     root = Tk()
     mainWindow = ParentWindow(root)

@@ -70,4 +70,5 @@ if __name__ == "__main__":
                 fileToAppend = findActiveContract(tickerPath)
                 print(fileToAppend + " ------ File to append")
                 appendData(fileToAppend)
+                
 
