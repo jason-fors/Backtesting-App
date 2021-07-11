@@ -188,6 +188,7 @@ def runTest():
                             continue
 
             allRecords.close()
+            return netReturns
 
 
 def checkNewDay(line):
@@ -196,6 +197,10 @@ def checkNewDay(line):
     global previousHour
     if (previousHour <= 22 and hour >=23):
         previousHour = hour
+        global previousDayYM
+        previousDayYM = priceYM
+        global previousDayES
+        previousDayES = priceES
         return True
     else:
         previousHour = hour
@@ -206,13 +211,16 @@ def processLine(line):
     fields = line.split(",")
     ticker = fields[1[0:2]]
     print(ticker)
+    global price
     price = fields[8]
     print(price)
     if ticker == "ES":
+        global priceES
         priceES = price
         global deltaES
         deltaES = priceES - previousDayES
     if ticker == "YM":
+        global priceYM
         priceYM = price
         global deltaYM
         deltaYM = priceYM - previousDayYM
@@ -225,6 +233,8 @@ if __name__ == "__main__":
     ymMult = 5                      # Global variable: Multiplier for S&P for deviation calculation
     deltaES = -9999                 # Global variable: Change in S&P
     deltaYM = -9999                 # Global variable: Change in Dow
+    priceYM = 0
+    priceES = 0
     buyStatus = False               # Global variable: Do we have on open 'sell' position?
     sellStatus = False              # Global variable: Do we have on open 'buy' position? 
     previousDayES = 0               # Global variable: ES value at previous day's close.
@@ -236,10 +246,12 @@ if __name__ == "__main__":
     winSellValue = -100             # Global variable: Value to take profit on buy
     loseSellValue = 20              # Global variable: Value to take loss on buy
     previousHour = 0                # Global variable: Hour of previous recorded trade
-    
+
+    total = runTest()    
+    print("Total returns = {0}", total)
 
     # Launching GUI Window and keeping it open
-    root = Tk()
-    mainWindow = ParentWindow(root)
-    root.mainloop()
+    # root = Tk()
+    # mainWindow = ParentWindow(root)
+    # root.mainloop()
 
