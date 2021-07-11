@@ -51,6 +51,9 @@ import os
 import time
 
 
+
+
+
 source = ""
 destination = ""
 
@@ -142,30 +145,99 @@ class ParentWindow(Frame):
     def cancel(self):
         self.master.destroy()  # Closes window
         
-        
 
-def makeVars():
-    with open('C:\\Users\\jason\\OneDrive\\Documents\\Old PC\\Model_Test\\AllRecords.csv', "rt") as allRecords:  # Writing records from unzipped file to aggregate file. a+ means append and create if it doesn't exist.
-            for line in allRecords:
-                deviation = (deltaES * esMult) + (deltaYM * ymMult)
+
+
+def runTest():
+    with open('C:\\Users\\jason\\OneDrive\\Documents\\Old PC\\Model_Test\\AllRecords.csv', "rt") as allRecords:  
+            file_content = allRecords.readlines()
+            while dayComplete == True:
+                if checkNewDay() == False:
+                    continue
+                else:
+                    dayComplete == False
+                for line in file_content:
+                    processLine(line)
+                    deviation = (deltaES * esMult) + (deltaYM * ymMult)
+                    if buyStatus == True:
+                        if (deviation >= winBuyValue or deviation <= loseBuyValue):
+                            global netReturns
+                            netReturns += deviation
+                            global buyStatus
+                            buyStatus = False
+                            dayComplete = True
+                        else:
+                            continue
+                    elif sellStatus == True:
+                        if (deviation <= winSellValue or deviation >= loseSellValue):
+                            global netReturns
+                            netReturns -= deviation
+                            global sellStatus
+                            sellStatus = False
+                            dayComplete = True
+                        else:
+                            continue
+                    else:               
+                        if deviation >= buyValue:
+                            global buyStatus
+                            buyStatus = True
+                        elif deviation <= sellValue:
+                            global sellStatus
+                            sellStatus = True
+                        else:
+                            continue
+
             allRecords.close()
 
 
-def getPreviousDayData(ticker, date):
-    yesterdayFacts = {}
-    # yesterdayFacts(closePrice) = 0
-    # yesterdayFacts(maxDev) = 0
-    # yesterdayFacts(minDev) = 0
-    # yesterdayFacts(zeroCrossings) = 0
-    # yesterdayFacts(totalRange) = 0
-    return yesterdayFacts
+def checkNewDay(line):
+    fields = line.split(",")
+    hour = fields[2[0:2]]
+    global previousHour
+    if (previousHour <= 22 and hour >=23):
+        previousHour = hour
+        return True
+    else:
+        previousHour = hour
+        return False
+
+
+def processLine(line):
+    fields = line.split(",")
+    ticker = fields[1[0:2]]
+    print(ticker)
+    price = fields[8]
+    print(price)
+    if ticker == "ES":
+        priceES = price
+        global deltaES
+        deltaES = priceES - previousDayES
+    if ticker == "YM":
+        priceYM = price
+        global deltaYM
+        deltaYM = priceYM - previousDayYM
+
 
         
-if __name__ == "__main__":
-    esMult = 50     # Global variable: Multiplier for Dow deviation calculation
-    ymMult = 5      # Global variable: Multiplier for S&P deviation calculation
-    deltaES = 0     # Global variable: Change in S&P
-    deltaYM = 0     # Global variable: Change in Dow
+if __name__ == "__main__":    
+    netReturns = 0                  # Global variable: Total profit/loss
+    esMult = 50                     # Global variable: Multiplier for Dow for deviation calculation
+    ymMult = 5                      # Global variable: Multiplier for S&P for deviation calculation
+    deltaES = -9999                 # Global variable: Change in S&P
+    deltaYM = -9999                 # Global variable: Change in Dow
+    buyStatus = False               # Global variable: Do we have on open 'sell' position?
+    sellStatus = False              # Global variable: Do we have on open 'buy' position? 
+    previousDayES = 0               # Global variable: ES value at previous day's close.
+    previousDayYM = 0               # Global variable: YM value at previous day's close.
+    buyValue = 40                   # Global variable: Value to trigger "buy"
+    winBuyValue = 100               # Global variable: Value to take profit on buy
+    loseBuyValue = -20              # Global variable: Value to take loss on buy
+    sellValue = -40                 # Global variable: Value to trigger "sell"
+    winSellValue = -100             # Global variable: Value to take profit on buy
+    loseSellValue = 20              # Global variable: Value to take loss on buy
+    previousHour = 0                # Global variable: Hour of previous recorded trade
+    
+
     # Launching GUI Window and keeping it open
     root = Tk()
     mainWindow = ParentWindow(root)
