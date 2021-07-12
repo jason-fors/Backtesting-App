@@ -144,76 +144,112 @@ class ParentWindow(Frame):
 
     def cancel(self):
         self.master.destroy()  # Closes window
-        
-
-
+    
 
 def runTest():
+    # Establishing global variables here due to all the conditional logic
+    global netReturns
+    global sellStatus
+    global buyStatus
+    global holding
+    dayComplete = True  # Need a previous day status to start test, so start first day as True and cycle through to next day.
     with open('C:\\Users\\jason\\OneDrive\\Documents\\Old PC\\Model_Test\\AllRecords.csv', "rt") as allRecords:  
-            file_content = allRecords.readlines()
-            while dayComplete == True:
-                if checkNewDay() == False:
-                    continue
+        file_content = allRecords.readlines()
+        i = 0  
+        k = 0                                                                             # For testing
+        for line in file_content:
+            #print("Next Line.")
+            if dayComplete == True:
+                k += 1
+                print(k)
+                dayComplete = checkNewDay(line)
+                #print("Day complete status: {0}".format(dayComplete))                                   # For testing
+                if dayComplete == False:
+                    print("Processing first line of new day.")
                 else:
-                    dayComplete == False
-                for line in file_content:
-                    processLine(line)
-                    deviation = (deltaES * esMult) + (deltaYM * ymMult)
-                    if buyStatus == True:
-                        if (deviation >= winBuyValue or deviation <= loseBuyValue):
-                            global netReturns
-                            netReturns += deviation
-                            global buyStatus
-                            buyStatus = False
-                            dayComplete = True
-                        else:
-                            continue
-                    elif sellStatus == True:
-                        if (deviation <= winSellValue or deviation >= loseSellValue):
-                            global netReturns
-                            netReturns -= deviation
-                            global sellStatus
-                            sellStatus = False
-                            dayComplete = True
-                        else:
-                            continue
-                    else:               
-                        if deviation >= buyValue:
-                            global buyStatus
-                            buyStatus = True
-                        elif deviation <= sellValue:
-                            global sellStatus
-                            sellStatus = True
-                        else:
-                            continue
+                    continue
+            i += 1                                                                               # For testing
+            if i > 20:                                                                               # For testing
+                break                                                                               # For testing
+            if (processLine(line)):
+                print("Doing continue. Next thing should be 'Price of...is'.")
+                continue
+            deviation = (deltaES * esMult) - (deltaYM * ymMult)
+            print("Deviation: {0}".format(deviation))
+            if buyStatus == True:
+                if (deviation >= winBuyValue or deviation <= loseBuyValue):
+                    result = closeBuy()
+                    print("Closing buy. Return is {0}".format(result))
+                    netReturns += result
+                    buyStatus = False
+                    dayComplete = True
+                else:
+                    continue
+            elif sellStatus == True:
+                if (deviation <= winSellValue or deviation >= loseSellValue):
+                    result = closeSell()
+                    print("Closing sell. Return is {0}".format(result))                        
+                    netReturns += result
+                    sellStatus = False
+                    dayComplete = True               
+                else:
+                    continue
+            else:               
+                if deviation >= buyValue:
+                    buyStatus = True
+                    print("Buy status is true.")
+                    print("Price of ES is {0}.  Price of YM is {1}".format(priceES, priceYM))
+                    print("Change in ES is {0}.  Change in YM is {1}".format(deltaES, deltaYM))
+                    holding = 50 * priceES - 5 * priceYM
+                    print("Holding value is: {0}".format(holding))
+                elif deviation <= sellValue:
+                    sellStatus = True
+                    print("Sell status is true.")
+                    print("Price of ES is {0}.  Price of YM is {1}".format(priceES, priceYM))
+                    print("Change in ES is {0}.  Change in YM is {1}".format(deltaES, deltaYM))
+                    holding = -50 * priceES + 5 * priceYM
+                    print("Holding value is: {0}".format(holding))
+                else:
+                    print("No buy/sell status.")
+                    continue
 
-            allRecords.close()
-            return netReturns
+        allRecords.close()
+        return netReturns
 
 
 def checkNewDay(line):
+    #print("Checking new day.")
     fields = line.split(",")
-    hour = fields[2[0:2]]
+    #print(fields[2])
+    timeString = str(fields[2])
+    endIndex = timeString.find(":")
+    hour = int(timeString[0:endIndex])
+    #print("Hour: {0}".format(hour))
     global previousHour
     if (previousHour <= 22 and hour >=23):
+        closeOpenPositions()
         previousHour = hour
+        print("Previous hour: {0}".format(previousHour))
         global previousDayYM
         previousDayYM = priceYM
+        print("Previous day Dow price: {0}".format(previousDayYM))
         global previousDayES
         previousDayES = priceES
-        return True
+        print("Previous day S&P price: {0}".format(previousDayES))
+        return False
     else:
         previousHour = hour
-        return False
+        #print("Previous hour: {0}".format(previousHour))
+        return True
 
 
 def processLine(line):
-    fields = line.split(",")
-    ticker = fields[1[0:2]]
-    print(ticker)
     global price
-    price = fields[8]
-    print(price)
+    global minute
+    fields = line.split(",")
+    ticker = fields[0][0:2]
+    price = float(fields[8])
+    print("Price of {0} is: {1}".format(ticker,price))
     if ticker == "ES":
         global priceES
         priceES = price
@@ -224,21 +260,62 @@ def processLine(line):
         priceYM = price
         global deltaYM
         deltaYM = priceYM - previousDayYM
+    # We need to update both tickers each minute before calculating deviations and doing trades.
+    print("Previous minute is {0}, this minute is {1}".format(minute, fields[2]))
+    if fields[2] == minute:                         
+        print("Same minute.")
+        return False
+    else:
+        print("Different minute.")
+        minute = fields[2]
+        return True
+    
+
+
+def closeOpenPositions():
+    global netReturns
+    if buyStatus == True:
+        result = closeBuy()
+        print("End of day closing open position. Result is: {0}".format(result))
+        netReturns += result
+    elif sellStatus == True:
+        result = closeBuy()
+        print("End of day closing open position. Result is: {0}".format(result))
+        netReturns += result
+    else:
+        print("End of day. No open positions.")
+
+
+def closeBuy():
+    global holding
+    print("Closing buy. Price ES is {0}, price YM is {1}.".format(priceES, priceYM))
+    closePosition = 50*priceES - 5*priceYM
+    print("...holding value is {0}, and close value is {1}".format(holding, closePosition))
+    result = closePosition - holding
+    return result
+
+
+def closeSell():
+    global holding
+    closePosition = -50*priceES + 5*priceYM
+    result = closePosition - holding
+    return result
+
 
 
         
 if __name__ == "__main__":    
-    netReturns = 0                  # Global variable: Total profit/loss
+    netReturns = 0.00               # Global variable: Total profit/loss
     esMult = 50                     # Global variable: Multiplier for Dow for deviation calculation
     ymMult = 5                      # Global variable: Multiplier for S&P for deviation calculation
-    deltaES = -9999                 # Global variable: Change in S&P
-    deltaYM = -9999                 # Global variable: Change in Dow
-    priceYM = 0
-    priceES = 0
+    deltaES = 0                     # Global variable: Change in S&P
+    deltaYM = 0                     # Global variable: Change in Dow
+    priceYM = 28868.00              # Global variable: Latest price of Dow -- establish a starting price, same as end of first day
+    priceES = 3261.5               # Global variable: Latest price of S&P -- establish a starting price, same as end of first day
     buyStatus = False               # Global variable: Do we have on open 'sell' position?
     sellStatus = False              # Global variable: Do we have on open 'buy' position? 
-    previousDayES = 0               # Global variable: ES value at previous day's close.
-    previousDayYM = 0               # Global variable: YM value at previous day's close.
+    previousDayES = 0.00            # Global variable: ES value at previous day's close.
+    previousDayYM = 0.00            # Global variable: YM value at previous day's close.
     buyValue = 40                   # Global variable: Value to trigger "buy"
     winBuyValue = 100               # Global variable: Value to take profit on buy
     loseBuyValue = -20              # Global variable: Value to take loss on buy
@@ -246,9 +323,12 @@ if __name__ == "__main__":
     winSellValue = -100             # Global variable: Value to take profit on buy
     loseSellValue = 20              # Global variable: Value to take loss on buy
     previousHour = 0                # Global variable: Hour of previous recorded trade
+    holding = 0.00                  # Global variable: Value of contracts at purchase
+    minute = "0:00"                   # Global variable: Minute of transaction. (Need to remember through iterations of processing lines.)
+
 
     total = runTest()    
-    print("Total returns = {0}", total)
+    print("Total returns = {0}".format(total))
 
     # Launching GUI Window and keeping it open
     # root = Tk()
