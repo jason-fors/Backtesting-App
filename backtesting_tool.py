@@ -158,78 +158,117 @@ def runTest():
     global loseSellValue
     global deviation
     global dayCount
+    global buyValue
+    global sellThreshold
+
+    # For iterative testing
+    global deltaES
+    global deltaYM
+    global priceYM
+    global priceES
+    global previousDayES
+    global previousDayYM
+    global previousHour
+    global minute    
+
     dayComplete = True  # Need a previous day status to start test, so start first day as True and cycle through to next day.
     with open('C:\\Users\\jason\\OneDrive\\Documents\\Old PC\\Model_Test\\AllRecords.csv', "rt") as allRecords:  
         file_content = allRecords.readlines()
-        i = 0  
-        k = 0                                                                             # For testing
-        for line in file_content:
-            #print("Next Line.")
-            if dayComplete == True:
-                k += 1
-                #print(k)
-                dayComplete = checkNewDay(line)
-                #print("Day complete status: {0}".format(dayComplete))                                   # For testing
+        testBuySellValue = 76
+        testSellThreshold = 0
+        for testSellThreshold in range(160,190,2):
+            netReturns = 0
+            sellThreshold = testSellThreshold
+            buyValue = testBuySellValue
+            sellValue = -testBuySellValue
+            deviation = 0.00                # Global variable: Net pair deviation from previous day
+            deltaES = 0                     # Global variable: Change in S&P
+            deltaYM = 0                     # Global variable: Change in Dow
+            priceYM = 28868.00              # Global variable: Latest price of Dow -- establish a starting price, same as start of first day
+            priceES = 3261.5                # Global variable: Latest price of S&P -- establish a starting price, same as start of first day
+            buyStatus = False               # Global variable: Do we have on open 'sell' position?
+            sellStatus = False              # Global variable: Do we have on open 'buy' position? 
+            previousDayES = 0.00            # Global variable: ES value at previous day's close.
+            previousDayYM = 0.00            # Global variable: YM value at previous day's close.
+            winBuyValue = 100.00            # Global variable: Value to take profit on buy
+            loseBuyValue = -20.00           # Global variable: Value to take loss on buy
+            winSellValue = -100.00          # Global variable: Value to take profit on buy
+            loseSellValue = 20.00           # Global variable: Value to take loss on buy
+            previousHour = 0                # Global variable: Hour of previous recorded trade
+            holding = 0.00                  # Global variable: Value of contracts at purchase
+            minute = "0:00"                 # Global variable: Minute of transaction. (Need to remember through iterations of processing lines.)
+            dayCount = 0                    # Global variable: Running count of trading days
+            netReturns = 0.00               # Global variable: Total profit/loss
+            i = 0  
+            k = 0                                                                             # For testing
+            for line in file_content:
+                #print("Next Line.")
                 if dayComplete == True:
+                    k += 1
+                    #print(k)
+                    dayComplete = checkNewDay(line)
+                    #print("Day complete status: {0}".format(dayComplete))                                   # For testing
+                    if dayComplete == True:
+                        continue
+                    else:
+                        dayCount += 1
+                        #print("Processing first line of new day.")
+                i += 1                                                                               # For testing
+                # if i > 1000:                                                                               # For testing
+                #      break                                                                               # For testing
+                if (processLine(line)):
+                    #print("Doing continue. Next thing should be 'Price of...is'.")
                     continue
-                else:
-                    dayCount += 1
-                    #print("Processing first line of new day.")
-            i += 1                                                                               # For testing
-            # if i > 10000:                                                                               # For testing
-            #     break                                                                               # For testing
-            if (processLine(line)):
-                #print("Doing continue. Next thing should be 'Price of...is'.")
-                continue
-            deviation = (deltaES * esMult) - (deltaYM * ymMult)
-            #print("Deviation: {0}".format(deviation))
-            if buyStatus == True:
-                if (deviation >= winBuyValue or deviation <= loseBuyValue):
-                    result = closeBuy()
-                    print("Closing buy. Return is {0}".format(result))
-                    netReturns += result
-                    print("Total returns = {0}".format(netReturns))
-                    buyStatus = False
-                    dayComplete = True
-                else:
-                    continue
-            elif sellStatus == True:
-                if (deviation <= winSellValue or deviation >= loseSellValue):
-                    result = closeSell()
-                    print("Closing sell. Return is {0}".format(result))                        
-                    netReturns += result
-                    print("Total returns = {0}".format(netReturns))
-                    sellStatus = False
-                    dayComplete = True               
-                else:
-                    continue
-            else:               
-                if deviation >= buyValue:
-                    buyStatus = True
-                    #print("Changing buy status to true.")
-                    #print("Price of ES is {0}.  Price of YM is {1}".format(priceES, priceYM))
-                    #print("Change in ES is {0}.  Change in YM is {1}".format(deltaES, deltaYM))
-                    winBuyValue = deviation + sellThreshold
-                    loseBuyValue = deviation - sellThreshold
-                    holding = 50 * priceES - 5 * priceYM
-                    #print("Holding value is: {0}".format(holding))
-                elif deviation <= sellValue:
-                    sellStatus = True
-                    #print("Changing sell status to true.")
-                    #print("Price of ES is {0}.  Price of YM is {1}".format(priceES, priceYM))
-                    #print("Change in ES is {0}.  Change in YM is {1}".format(deltaES, deltaYM))
-                    winSellValue = deviation - sellThreshold
-                    loseSellValue = deviation + sellThreshold
-                    holding = -50 * priceES + 5 * priceYM
-                    #print("Holding value is: {0}".format(holding))
-                else:
-                    #print("No buy/sell status.")
-                    continue
+                deviation = (deltaES * esMult) - (deltaYM * ymMult)
+                #print("Deviation: {0}".format(deviation))
+                if buyStatus == True:
+                    if (deviation >= winBuyValue or deviation <= loseBuyValue):
+                        result = closeBuy()
+                        #print("Closing buy. Return is {0}".format(result))
+                        netReturns += result
+                        #print("Total returns = {0}".format(netReturns))
+                        buyStatus = False
+                        dayComplete = True
+                    else:
+                        continue
+                elif sellStatus == True:
+                    if (deviation <= winSellValue or deviation >= loseSellValue):
+                        result = closeSell()
+                        #print("Closing sell. Return is {0}".format(result))                        
+                        netReturns += result
+                        #print("Total returns = {0}".format(netReturns))
+                        sellStatus = False
+                        dayComplete = True               
+                    else:
+                        continue
+                else:               
+                    if deviation >= buyValue:
+                        buyStatus = True
+                        #print("Changing buy status to true.")
+                        #print("Price of ES is {0}.  Price of YM is {1}".format(priceES, priceYM))
+                        #print("Change in ES is {0}.  Change in YM is {1}".format(deltaES, deltaYM))
+                        winBuyValue = deviation + sellThreshold
+                        loseBuyValue = deviation - sellThreshold
+                        holding = 50 * priceES - 5 * priceYM
+                        #print("Holding value is: {0}".format(holding))
+                    elif deviation <= sellValue:
+                        sellStatus = True
+                        #print("Changing sell status to true.")
+                        #print("Price of ES is {0}.  Price of YM is {1}".format(priceES, priceYM))
+                        #print("Change in ES is {0}.  Change in YM is {1}".format(deltaES, deltaYM))
+                        winSellValue = deviation - sellThreshold
+                        loseSellValue = deviation + sellThreshold
+                        holding = -50 * priceES + 5 * priceYM
+                        #print("Holding value is: {0}".format(holding))
+                    else:
+                        #print("No buy/sell status.")
+                        continue
 
+            #print (k)
+            #print (i)
+            print ("For Open Threshold={0} and Close Threshold={1}, Total returns={2}".format(buyValue, sellThreshold, netReturns))
         allRecords.close()
-        print (k)
-        print (i)
-        return netReturns
+        
 
 
 def checkNewDay(line):
@@ -286,7 +325,6 @@ def processLine(line):
         return True
     
 
-
 def closeOpenPositions():
     global netReturns
     if buyStatus == True:
@@ -322,7 +360,7 @@ def closeSell():
 if __name__ == "__main__":    
     esMult = 50                     # Global variable: Multiplier for Dow for deviation calculation. Constant for now.
     ymMult = 5                      # Global variable: Multiplier for S&P for deviation calculation.  Constant for now.
-    sellThreshold = 60              # Global variable: Threshold for taking gains/losses. Constant for now.
+    sellThreshold = 170             # Global variable: Threshold for taking gains/losses. Constant for now.
     deviation = 0.00                # Global variable: Net pair deviation from previous day
     deltaES = 0                     # Global variable: Change in S&P
     deltaYM = 0                     # Global variable: Change in Dow
@@ -332,10 +370,10 @@ if __name__ == "__main__":
     sellStatus = False              # Global variable: Do we have on open 'buy' position? 
     previousDayES = 0.00            # Global variable: ES value at previous day's close.
     previousDayYM = 0.00            # Global variable: YM value at previous day's close.
-    buyValue = 40.00                # Global variable: Value to trigger "buy". Constant for now.
+    buyValue = 60.00                # Global variable: Value to trigger "buy". Constant for now.
     winBuyValue = 100.00            # Global variable: Value to take profit on buy
     loseBuyValue = -20.00           # Global variable: Value to take loss on buy
-    sellValue = -40.00              # Global variable: Value to trigger "sell". Constant for now.
+    sellValue = -60.00              # Global variable: Value to trigger "sell". Constant for now.
     winSellValue = -100.00          # Global variable: Value to take profit on buy
     loseSellValue = 20.00           # Global variable: Value to take loss on buy
     previousHour = 0                # Global variable: Hour of previous recorded trade
@@ -345,8 +383,8 @@ if __name__ == "__main__":
     netReturns = 0.00               # Global variable: Total profit/loss
 
 
-    total = runTest()    
-    print("Total returns = {0}".format(total))
+    runTest()    
+    #print("Total returns = {0}".format(total))
 
     # Launching GUI Window and keeping it open
     # root = Tk()
