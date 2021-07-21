@@ -146,7 +146,7 @@ class ParentWindow(Frame):
         self.master.destroy()  # Closes window
     
 
-def runTest():
+def runReversionTest():
     # Establishing global variables here due to all the conditional logic
     global netReturns
     global sellStatus
@@ -180,14 +180,14 @@ def runTest():
     with open('C:\\Users\\jason\\OneDrive\\Documents\\Old PC\\Model_Test\\AllRecords.csv', "rt") as allRecords:  
         file_content = allRecords.readlines()
         testBuySellValue = 50.0
-        testWinThreshold = 400.0
-        testLoseThreshold = 390.0
-        for testWinThreshold in range(400,401,1):
+        testWinThreshold = 50.0
+        testLoseThreshold = 50.0
+        for testWinThreshold in range(50,51,1):
             netReturns = 0
             winThreshold = testWinThreshold
             loseThreshold = testLoseThreshold
-            buyValue = testBuySellValue
-            sellValue = -testBuySellValue
+            buyValue = -testBuySellValue
+            sellValue = testBuySellValue
             deviation = 0.00                
             deltaES = 0                     
             deltaYM = 0                     
@@ -197,10 +197,10 @@ def runTest():
             sellStatus = False              
             previousDayES = 0.00            
             previousDayYM = 0.00            
-            winBuyValue = 100.00            
-            loseBuyValue = -20.00           
-            winSellValue = -100.00          
-            loseSellValue = 20.00           
+            winBuyValue = 0.00            
+            loseBuyValue = -100.00           
+            winSellValue = 0.00          
+            loseSellValue = 100.00           
             previousHour = 0                
             holding = 0.00                  
             minute = "0:00"
@@ -236,9 +236,9 @@ def runTest():
                 deviation = (deltaES * esMult) - (deltaYM * ymMult)
                 #print("Deviation: {0}".format(deviation))
                 if buyStatus == True:
-                    if (deviation >= winBuyValue or deviation <= loseBuyValue):
+                    if (deviation <= winBuyValue or deviation >= loseBuyValue):
                         result = closeBuy()
-                        #print("Closing buy. Return is {0}".format(result))
+                        print("Closing buy. Return is {0}".format(result))
                         if (result > 2000 or result < -2000):
                             print("Something went wrong. Change of {0}".format(result))
                         buyReturns += result
@@ -250,9 +250,9 @@ def runTest():
                         checkNewDay(line)
                         continue
                 elif sellStatus == True:
-                    if (deviation <= winSellValue or deviation >= loseSellValue):
+                    if (deviation >= winSellValue or deviation <= loseSellValue):
                         result = closeSell()
-                        #print("Closing sell. Return is {0}".format(result))
+                        print("Closing sell. Return is {0}".format(result))
                         if (result > 2000 or result < -2000):
                             print("Something went wrong. Change of {0}".format(result))
                         sellReturns += result                        
@@ -264,24 +264,24 @@ def runTest():
                         checkNewDay(line)
                         continue
                 else:
-                    if deviation >= buyValue:
+                    if deviation <= buyValue:
                         buyStatus = True
                         tradeCount += 1
                         #print("Changing buy status to true.")
                         #print("Price of ES is {0}.  Price of YM is {1}".format(priceES, priceYM))
                         #print("Change in ES is {0}.  Change in YM is {1}".format(deltaES, deltaYM))
-                        winBuyValue = deviation + winThreshold
-                        loseBuyValue = deviation - loseThreshold
+                        winBuyValue = deviation - winThreshold
+                        loseBuyValue = deviation + loseThreshold
                         holding = 50 * priceES - 5 * priceYM
                         #print("Holding value is: {0}".format(holding))
-                    elif deviation <= sellValue:
+                    elif deviation >= sellValue:
                         sellStatus = True
                         tradeCount += 1
                         #print("Changing sell status to true.")
                         #print("Price of ES is {0}.  Price of YM is {1}".format(priceES, priceYM))
                         #print("Change in ES is {0}.  Change in YM is {1}".format(deltaES, deltaYM))
-                        winSellValue = deviation - winThreshold
-                        loseSellValue = deviation + loseThreshold
+                        winSellValue = deviation + winThreshold
+                        loseSellValue = deviation - loseThreshold
                         holding = -50 * priceES + 5 * priceYM
                         #print("Holding value is: {0}".format(holding))
                     #else:
@@ -380,14 +380,14 @@ def closeOpenPositions():
     global sellStatus
     if buyStatus == True:
         result = closeBuy()
-        #print("End of day closing open buy position. Result is: {0}".format(result))
+        print("End of day closing open buy position. Result is: {0}".format(result))
         buyReturns += result
         netReturns += result
         #print("Total returns = {0}".format(netReturns))
         buyStatus = False
     elif sellStatus == True:
         result = closeSell()
-        #print("End of day closing open sell position. Result is: {0}".format(result))
+        print("End of day closing open sell position. Result is: {0}".format(result))
         sellReturns += result
         netReturns += result
         #print("Total returns = {0}".format(netReturns))
@@ -450,7 +450,7 @@ if __name__ == "__main__":
 
 
 
-    runTest()    
+    runReversionTest()    
 
     # Launching GUI Window and keeping it open
     # root = Tk()
