@@ -182,7 +182,7 @@ def runTest():
         testBuySellValue = 50.0
         testWinThreshold = 400.0
         testLoseThreshold = 390.0
-        for testWinThreshold in range(400,401,1):
+        for testWinThreshold in range(400,411,10):
             netReturns = 0
             winThreshold = testWinThreshold
             loseThreshold = testLoseThreshold

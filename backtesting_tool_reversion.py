@@ -179,10 +179,11 @@ def runReversionTest():
     dayComplete = True  # Need a previous day status to start test, so start first day as True and cycle through to next day.
     with open('C:\\Users\\jason\\OneDrive\\Documents\\Old PC\\Model_Test\\AllRecords.csv', "rt") as allRecords:  
         file_content = allRecords.readlines()
-        testBuySellValue = 50.0
-        testWinThreshold = 50.0
-        testLoseThreshold = 50.0
-        for testWinThreshold in range(50,51,1):
+        testBuySellValue = 65
+        testWinThreshold = 45
+        testLoseThreshold = 50
+        for testLoseThreshold in range(1000,2001,100):
+            # Reset values before each iteration of the test
             netReturns = 0
             winThreshold = testWinThreshold
             loseThreshold = testLoseThreshold
@@ -236,9 +237,9 @@ def runReversionTest():
                 deviation = (deltaES * esMult) - (deltaYM * ymMult)
                 #print("Deviation: {0}".format(deviation))
                 if buyStatus == True:
-                    if (deviation <= winBuyValue or deviation >= loseBuyValue):
+                    if (deviation >= winBuyValue or deviation <= loseBuyValue):
                         result = closeBuy()
-                        print("Closing buy. Return is {0}".format(result))
+                        #print("Closing buy. Return is {0}".format(result))
                         if (result > 2000 or result < -2000):
                             print("Something went wrong. Change of {0}".format(result))
                         buyReturns += result
@@ -250,9 +251,9 @@ def runReversionTest():
                         checkNewDay(line)
                         continue
                 elif sellStatus == True:
-                    if (deviation >= winSellValue or deviation <= loseSellValue):
+                    if (deviation <= winSellValue or deviation >= loseSellValue):
                         result = closeSell()
-                        print("Closing sell. Return is {0}".format(result))
+                        #print("Closing sell. Return is {0}".format(result))
                         if (result > 2000 or result < -2000):
                             print("Something went wrong. Change of {0}".format(result))
                         sellReturns += result                        
@@ -270,8 +271,8 @@ def runReversionTest():
                         #print("Changing buy status to true.")
                         #print("Price of ES is {0}.  Price of YM is {1}".format(priceES, priceYM))
                         #print("Change in ES is {0}.  Change in YM is {1}".format(deltaES, deltaYM))
-                        winBuyValue = deviation - winThreshold
-                        loseBuyValue = deviation + loseThreshold
+                        winBuyValue = deviation + winThreshold
+                        loseBuyValue = deviation - loseThreshold
                         holding = 50 * priceES - 5 * priceYM
                         #print("Holding value is: {0}".format(holding))
                     elif deviation >= sellValue:
@@ -280,8 +281,8 @@ def runReversionTest():
                         #print("Changing sell status to true.")
                         #print("Price of ES is {0}.  Price of YM is {1}".format(priceES, priceYM))
                         #print("Change in ES is {0}.  Change in YM is {1}".format(deltaES, deltaYM))
-                        winSellValue = deviation + winThreshold
-                        loseSellValue = deviation - loseThreshold
+                        winSellValue = deviation - winThreshold
+                        loseSellValue = deviation + loseThreshold
                         holding = -50 * priceES + 5 * priceYM
                         #print("Holding value is: {0}".format(holding))
                     #else:
@@ -380,14 +381,14 @@ def closeOpenPositions():
     global sellStatus
     if buyStatus == True:
         result = closeBuy()
-        print("End of day closing open buy position. Result is: {0}".format(result))
+        #print("End of day closing open buy position. Result is: {0}".format(result))
         buyReturns += result
         netReturns += result
         #print("Total returns = {0}".format(netReturns))
         buyStatus = False
     elif sellStatus == True:
         result = closeSell()
-        print("End of day closing open sell position. Result is: {0}".format(result))
+        #print("End of day closing open sell position. Result is: {0}".format(result))
         sellReturns += result
         netReturns += result
         #print("Total returns = {0}".format(netReturns))
@@ -420,34 +421,33 @@ def closeSell():
 
         
 if __name__ == "__main__":    
-    esMult = 50                     # Global variable: Multiplier for Dow for deviation calculation. Constant for now.
-    ymMult = 5                      # Global variable: Multiplier for S&P for deviation calculation.  Constant for now.
-    winThreshold = 170             # Global variable: Threshold for taking gains.
-    loseThreshold = 170             # Global variable: Threshold for taking losses.   
-    deviation = 0.00                # Global variable: Net pair deviation from previous day
-    deltaES = 0.00                  # Global variable: Change in S&P
-    deltaYM = 0.00                  # Global variable: Change in Dow
-    priceYM = 28868.00              # Global variable: Latest price of Dow -- establish a starting price, same as end of first day
-    priceES = 3261.5                # Global variable: Latest price of S&P -- establish a starting price, same as end of first day
-    buyStatus = False               # Global variable: Do we have on open 'sell' position?
-    sellStatus = False              # Global variable: Do we have on open 'buy' position? 
-    previousDayES = 0.00            # Global variable: ES value at previous day's close.
-    previousDayYM = 0.00            # Global variable: YM value at previous day's close.
-    buyValue = 60.00                # Global variable: Value to trigger "buy". Constant for now.
-    winBuyValue = 100.00            # Global variable: Value to take profit on buy
-    loseBuyValue = -20.00           # Global variable: Value to take loss on buy
-    sellValue = -60.00              # Global variable: Value to trigger "sell". Constant for now.
-    winSellValue = -100.00          # Global variable: Value to take profit on buy
-    loseSellValue = 20.00           # Global variable: Value to take loss on buy
-    previousHour = 0                # Global variable: Hour of previous recorded trade
-    holding = 0.00                  # Global variable: Value of contracts at purchase
-    minute = "0:00"                 # Global variable: Minute of transaction. (Need to remember through iterations of processing lines.)
-    dayCount = 0                    # Global variable: Running count of trading days
-    netReturns = 0.00               # Global variable: Total profit/loss
-    buyReturns = 0.00               # Global variable: Total profit/loss on buy positions
-    sellReturns = 0.00              # Global variable: Total profit/loss on sell positions
+    esMult = 50                     # Multiplier for Dow for deviation calculation. Constant for now.
+    ymMult = 5                      # Multiplier for S&P for deviation calculation.  Constant for now.
+    winThreshold = 170              # Threshold for taking gains.
+    loseThreshold = 170             # Threshold for taking losses.   
+    deviation = 0.00                # Net pair deviation from previous day
+    deltaES = 0.00                  # Change in S&P
+    deltaYM = 0.00                  # Change in Dow
+    priceYM = 28868.00              # Latest price of Dow -- establish a starting price, same as end of first day
+    priceES = 3261.5                # Latest price of S&P -- establish a starting price, same as end of first day
+    buyStatus = False               # Do we have on open 'sell' position?
+    sellStatus = False              # Do we have on open 'buy' position? 
+    previousDayES = 0.00            # ES value at previous day's close.
+    previousDayYM = 0.00            # YM value at previous day's close.
+    buyValue = 60.00                # Value to trigger "buy".
+    winBuyValue = 100.00            # Value to take profit on buy
+    loseBuyValue = -20.00           # Value to take loss on buy
+    sellValue = -60.00              # Value to trigger "sell".
+    winSellValue = -100.00          # Value to take profit on buy
+    loseSellValue = 20.00           # Value to take loss on buy
+    previousHour = 0                # Hour of previous recorded trade
+    holding = 0.00                  # Value of contracts at purchase
+    minute = "0:00"                 # Minute of transaction. (Need to remember through iterations of processing lines.)
+    dayCount = 0                    # Running count of trading days
+    netReturns = 0.00               # Total profit/loss
+    buyReturns = 0.00               # Total profit/loss on buy positions
+    sellReturns = 0.00              # Total profit/loss on sell positions
     tradeCount = 0                  # For tracking how many contracts are bought/sold
-
 
 
     runReversionTest()    
