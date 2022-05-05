@@ -4,7 +4,7 @@
 ### Aggregate_Files
 Goes through all the files purchased from vendor and aggregates the desired case data into one file. 
 This required:
-1. Trarversing the (2,273) files in the folder structure (3 layers deep, 1,193 folders) and:
+1. Traversing the (2,273) files in the folder structure (3 layers deep, 1,193 folders) and:
     a. Cycling through for each ticker (ES or YM) within each day,
     b. Identifying which contract makes the most sense for that day (the file with the most records should work)
     c. Add those records into an aggregate file.
